@@ -12,11 +12,11 @@ app.enable("jsonp callback");
 
 var session_store = new express.session.MemoryStore;
 
-var db = mysql.createConnection({ user: 'root',  password: '1234'});
-db.connect(function(err) {
-    if (err) throw err;
-    //db.query("use return");
-});
+// var db = mysql.createConnection({ user: 'root',  password: '1234'});
+// db.connect(function(err) {
+//     if (err) throw err;
+//     //db.query("use return");
+// });
 
 
 
