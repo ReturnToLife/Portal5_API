@@ -74,7 +74,7 @@ app.post(makePath('/auth'), function(req, res) {
     if (!login || !password) {
 	return failwithone(res, [7, 'MISSING_PARAMETER']);
     }
-    intra.login(login, password, function(error, result) {
+    intra.login(login, password, function(error, phpsessid, result, cookie) {
 	if (error) {
 	    return failwithone(res, [6, 'AUTHENTICATION_FAILURE']);
 	}
@@ -82,6 +82,7 @@ app.post(makePath('/auth'), function(req, res) {
 	sess = {'cookie': {'expires': new Date(Date.now() + 30 * 24 * 3600 * 1000)},
 		'login': login,
 		'password': password,
+		'intra_sessid': phpsessid,
 	       }
 	session_store.set(sid, sess, function(err, session) {
 	    res.json({'login': login, 'token': sid, 'expiration': 'never'});

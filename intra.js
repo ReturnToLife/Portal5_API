@@ -21,8 +21,17 @@ function login(login, password, callback) {
 	else if (response.statusCode != 200) {
 	    err = 'Server rejected the request. HTTP Code: ' + response.statusCode;
 	}
-	console.log('BODY: ' + body);
-	callback(err, JSON.parse(JSON.minify(body)));	
+	var set_cookies = response.headers['set-cookie'];
+	var intra_sessid = null;
+	set_cookies.forEach(function(c) {
+	    if (c.indexOf('PHPSESSID=') == 0) {
+		intra_sessid = c.split(',')[0];
+	    }
+	});
+	if (!intra_sessid) {
+	    err = 'No PHPSESSID';
+	}
+	callback(err, intra_sessid, JSON.parse(JSON.minify(body)));	
     });
 }
 
