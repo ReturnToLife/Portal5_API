@@ -64,7 +64,11 @@ function generateUUID(){
     return uuid;
 };
 
-app.get('/api/auth', function(req, res) {
+function makePath(path) {
+    return '/api' + path;
+}
+
+app.get(makePath('/auth'), function(req, res) {
     var login = req.query.login;
     var password = req.query.password;
     if (!login || !password) {
@@ -85,14 +89,14 @@ app.get('/api/auth', function(req, res) {
     });
 });
 
-app.del('/auth/:sid', function(req, res) {
+app.del(makePath('/auth/:sid'), function(req, res) {
     var sid = req.params.sid;
     if (!sid) return failauth(res);
     session_store.destroy(sid);    
     res.json({});
 });
 
-app.authget("/foo", function(req, res) {
+app.authget(makePath('/foo'), function(req, res) {
     res.json("hello, " + req.auth_info.login);
 });
 
