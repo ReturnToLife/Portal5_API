@@ -3,6 +3,7 @@ var app = express();
 var mysql = require('mysql');
 var intra = require('./intra.js');
 
+app.use(express.logger());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
@@ -53,7 +54,17 @@ app.authget = function(path, callback) {
     });
 }
 
-app.get('/api/auth/login', function(req, res) {
+function generateUUID(){
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+};
+
+app.get('/api/auth', function(req, res) {
     var login = req.query.login;
     var password = req.query.password;
     if (!login || !password) {
@@ -63,7 +74,7 @@ app.get('/api/auth/login', function(req, res) {
 	if (error) {
 	    return failwithone(res, [6, 'AUTHENTICATION_FAILURE']);
 	}
-	sid = 'salut'; // FIXME: generate a random session ID
+	sid = generateUUID();
 	sess = {'cookie': {'expires': new Date(Date.now() + 30 * 24 * 3600 * 1000)},
 		'login': login,
 		'password': password,
@@ -72,6 +83,13 @@ app.get('/api/auth/login', function(req, res) {
 	    res.json({'login': login, 'token': sid, 'expiration': 'never'});
 	});
     });
+});
+
+app.del('/auth/:sid', function(req, res) {
+    var sid = req.params.sid;
+    if (!sid) return failauth(res);
+    session_store.destroy(sid);    
+    res.json({});
 });
 
 app.authget("/foo", function(req, res) {
