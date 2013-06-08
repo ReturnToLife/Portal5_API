@@ -68,9 +68,9 @@ function makePath(path) {
     return '/api' + path;
 }
 
-app.get(makePath('/auth'), function(req, res) {
-    var login = req.query.login;
-    var password = req.query.password;
+app.post(makePath('/auth'), function(req, res) {
+    var login = req.body.login;
+    var password = req.body.password;
     if (!login || !password) {
 	return failwithone(res, [7, 'MISSING_PARAMETER']);
     }
