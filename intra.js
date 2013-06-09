@@ -25,7 +25,7 @@ function login(login, password, callback) {
 	var intra_sessid = null;
 	set_cookies.forEach(function(c) {
 	    if (c.indexOf('PHPSESSID=') == 0) {
-		intra_sessid = c.split(',')[0];
+		intra_sessid = c.split(';')[0];
 	    }
 	});
 	if (!intra_sessid) {

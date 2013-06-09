@@ -85,7 +85,7 @@ app.post(makePath('/auth'), function(req, res) {
 		'intra_sessid': phpsessid,
 	       }
 	session_store.set(sid, sess, function(err, session) {
-	    res.json({'login': login, 'token': sid, 'expiration': 'never'});
+	    res.json({'login': login, 'token': sid, 'expiration': 'never', 'intra_sessid': phpsessid});
 	});
     });
 });
