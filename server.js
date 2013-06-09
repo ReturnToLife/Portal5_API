@@ -27,15 +27,6 @@ function failauth(res) {
 }
 
 function checkauth(req, res, callback) {
-    if (DEBUG) {
-	req.auth_info = {
-	    'login': 'noel_p',
-	    'password': 'hohoho',
-	    'method': 'debug_mode',
-	};
-	return callback(req, res);
-    }
-
     var sid = req.query.token;
     if (!sid) return failauth(res);
     session_store.get(sid, function(err, session) {
@@ -109,6 +100,16 @@ app.del(makePath('/auth/:sid'), function(req, res) {
     session_store.destroy(sid);    
     res.json({});
 });
+
+function getUser(req, res, login) {
+    // FIXME look at the "api" parameter
+    intra.makeGET('/user/'+login+'/?format=json', function(response) {
+	res.json(response);
+    });
+}
+
+app.authget(makePath('/users'), function(req, res) { getUser(req, res, req.auth_info.login); });
+app.authget(makePath('/users/:login'), function(req, res) { getUser(req, res, req.params.login); });
 
 // app.authget(makePath('/articles/:id'), function(req, res) {
 //     // FIXME: access control
