@@ -13,7 +13,7 @@ function login(login, password, callback) {
 	password: password,
     }}, function(err, response, body) {
 	if (err) {
-	    callback(err, null);	
+	    return callback(err, '', null);	
 	}
 	var set_cookies = response.headers['set-cookie'];
 	if (response.statusCode == 403 || !set_cookies) {
@@ -21,6 +21,9 @@ function login(login, password, callback) {
 	}
 	else if (response.statusCode != 200) {
 	    err = 'Server rejected the request. HTTP Code: ' + response.statusCode;
+	}
+	if (err) {
+	    return callback(err, '', null);
 	}
 	var intra_sessid = null;
 	set_cookies.forEach(function(c) {
