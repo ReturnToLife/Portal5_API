@@ -151,7 +151,7 @@ app.authget(makePath('/users/:login'), function(req, res) { getUser(req, res, re
 
 
 
-var sequelize = new Sequelize('return_sequelize', 'root', '1234');
+var sequelize = new Sequelize('return_sequelize', 'return_sequelize', '1234');
 
 var Cast = sequelize.define('Cast', {
     name: Sequelize.STRING
