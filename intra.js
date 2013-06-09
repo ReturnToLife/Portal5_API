@@ -15,13 +15,13 @@ function login(login, password, callback) {
 	if (err) {
 	    callback(err, null);	
 	}
-	if (response.statusCode == 403) {
+	var set_cookies = response.headers['set-cookie'];
+	if (response.statusCode == 403 || !set_cookies) {
 	    err = 'Invalid credentials';
 	}
 	else if (response.statusCode != 200) {
 	    err = 'Server rejected the request. HTTP Code: ' + response.statusCode;
 	}
-	var set_cookies = response.headers['set-cookie'];
 	var intra_sessid = null;
 	set_cookies.forEach(function(c) {
 	    if (c.indexOf('PHPSESSID=') == 0) {
