@@ -28,10 +28,19 @@ function failauth(res) {
 
 function checkauth(req, res, callback) {
     var sid = req.query.token;
-    if (!sid) return failauth(res);
+    if (!sid) {
+	if (DEBUG) {
+	    req.auth_info = {
+		'login': 'noel_p',
+		'password': 'hohoho',
+		'method': 'debug_mode',
+	    };
+	    return callback(req, res);
+	}
+	return failauth(res);
+    }
     session_store.get(sid, function(err, session) {
-	if (err) return failauth(res, err);
-	if (!session) return failauth(res);
+	if (err || !session) return failauth(res);
 	req.auth_info = {
 	    'login': session.login,
 	    'password': session.password,
@@ -89,6 +98,10 @@ app.post(makePath('/auth'), function(req, res) {
 		'intra_sessid': phpsessid,
 	       }
 	session_store.set(sid, sess, function(err, session) {
+	    if (err) {
+		console.log(err);
+		return failwithone(res, [5, 'INTERNAL_ERROR']);
+	    }
 	    res.json({'login': login, 'token': sid, 'expiration': 'never', 'intra_sessid': phpsessid});
 	});
     });
@@ -97,7 +110,7 @@ app.post(makePath('/auth'), function(req, res) {
 app.del(makePath('/auth/:sid'), function(req, res) {
     var sid = req.params.sid;
     if (!sid) return failauth(res);
-    session_store.destroy(sid);    
+    session_store.destroy(sid); // FIXME there might be a bug here
     res.json({});
 });
 
@@ -159,13 +172,40 @@ var Cast = sequelize.define('Cast', {
 var Category = sequelize.define('Category', {
     name: Sequelize.STRING
 });
+var UserCast = sequelize.define('UserCast', {
+    login: Sequelize.STRING
+    // CastID
+});
+var Article = sequelize.define('Article', {
+    title: Sequelize.STRING,
+    content: Sequelize.TEXT,
+    creation_time: Sequelize.DATE,
+    modification_time: Sequelize.DATE,
+    publication_time: Sequelize.DATE,
+    format: {
+	type: Sequelize.ENUM,
+	values: ['markdown'],
+    },
+    // CategoryID
+});
+var TagArticle = sequelize.define('TagArticle', {
+    tag: Sequelize.STRING
+    // ArticleID
+});
+var AuthorArticle = sequelize.define('AuthorArticle', {
+    login: Sequelize.STRING
+    // ArticleID
+});
 
 Category.hasMany(Cast);
 Cast.belongsTo(Category);
 
-UserCast = sequelize.define('UserCast',{
-    login: Sequelize.STRING
-})
+Category.hasMany(Article);
+Article.belongsTo(Category);
+Article.hasMany(AuthorArticle);
+AuthorArticle.belongsTo(Article);
+Article.hasMany(TagArticle);
+TagArticle.belongsTo(Article);
 
 Cast.hasMany(UserCast);
 UserCast.belongsTo(Cast);
@@ -228,6 +268,10 @@ function cast_toPublic(cast_sql) {
     };
 }
 
+function article_toPublic(article_sql) {
+    return article_sql;
+}
+
 app.authget(makePath('/casts'), function(req, res) {
     Cast.findAll({ include: [Category, UserCast] }).ok(function(casts) {
 	res.json(casts.map(cast_toPublic));
@@ -242,7 +286,7 @@ app.authget(makePath('/casts/:id'), function(req, res) {
 });
 
 app.authdel(makePath('/casts/:id'), function(req, res) {
-    Cast.find({ where: { id: req.params.id },  include: [Category] }).ok(function(cast) {
+    Cast.find({ where: { id: req.params.id }}).ok(function(cast) {
 	if (!cast) return failwithone(res, [2, 'CAST_NOT_EXIST']);
 	cast.destroy().ok(function() {
 	    res.json({});
@@ -272,6 +316,13 @@ app.authpost(makePath('/casts'), function(req, res) {
 	    retval.members = members;
 	    res.json(retval);
 	});
+    });
+});
+
+app.authget(makePath('/articles/:id'), function(req, res) {
+    Article.find({ where: { id: req.params.id },  include: [Category, AuthorArticle, TagArticle] }).ok(function(article) {
+	if (!article) return failwithone(res, [2, 'ARTICLE_NOT_EXIST']);
+	res.json(article_toPublic(article));
     });
 });
 
